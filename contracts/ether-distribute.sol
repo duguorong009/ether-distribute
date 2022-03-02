@@ -19,6 +19,7 @@ contract EtherDistribute {
     event Received(address, uint);
     event UserAdded(address, uint);
     event Distributed(address, uint);
+    event FeeWithdrawn(address, uint);
 
     constructor() {
         admin = msg.sender;
@@ -46,6 +47,16 @@ contract EtherDistribute {
             require(sent, "Failed to send Ether");
             emit Distributed(_to, individualEthAmount);
         }
+    }
+
+    function withdrawFees() public payable {
+        require(msg.sender == admin, "Unauthorized");
+
+        address payable _to = payable(msg.sender);
+        (bool success, bytes memory _data) = _to.call{value: feeAmount}("");
+        require(success, "Failed to withdraw fee");
+        
+        emit FeeWithdrawn(msg.sender, feeAmount);
     }
 
     receive() external payable {
