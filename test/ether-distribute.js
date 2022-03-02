@@ -16,7 +16,7 @@ describe("Ether-Distribute contract", function() {
 
     it("Deployment should be success", async function () {
 
-        const contractAdmin = await ethDistributeContract.getAdmin();
+        const contractAdmin = await ethDistributeContract.admin();
         expect(contractAdmin.toString()).to.equal(admin.address.toString());
 
     });

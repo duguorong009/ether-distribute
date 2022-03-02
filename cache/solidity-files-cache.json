@@ -2,8 +2,8 @@
   "_format": "hh-sol-cache-2",
   "files": {
     "/home/honeybee/Documents/integral/ether-distribute/contracts/ether-distribute.sol": {
-      "lastModificationDate": 1646242141051,
-      "contentHash": "1369285c47991ed1bcd5e04a7368ca4a",
+      "lastModificationDate": 1646242879601,
+      "contentHash": "25fcb11935d220ca37e3a6129a7ad700",
       "sourceName": "contracts/ether-distribute.sol",
       "solcConfig": {
         "version": "0.8.0",

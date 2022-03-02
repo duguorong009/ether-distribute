@@ -7,7 +7,7 @@ contract EtherDistribute {
     using SafeMath for uint;
 
     // Variables
-    address private admin;
+    address public admin;
 
     uint public feeAmount;
     uint public feeRate = 10;
@@ -18,10 +18,6 @@ contract EtherDistribute {
 
     constructor() {
         admin = msg.sender;
-    }
-
-    function getAdmin() external view returns (address) {
-        return admin;
     }
 
     function distributeEth(address[] calldata users) public payable {
