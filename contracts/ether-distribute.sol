@@ -9,15 +9,10 @@ contract EtherDistribute {
     // Variables
     address private admin;
 
-    uint public ethAmount;
     uint public feeAmount;
     uint public feeRate = 10;
 
-    address[] private users;
-
     // Events
-    event Received(address, uint);
-    event UserAdded(address, uint);
     event Distributed(address, uint);
     event FeeWithdrawn(address, uint);
 
@@ -29,16 +24,15 @@ contract EtherDistribute {
         return admin;
     }
 
-    function addUser(address newUser) public {
-        users.push(newUser);
-        emit UserAdded(newUser, users.length);
-    }
+    function distributeEth(address[] calldata users) public payable {
+        uint ethDistAmount = msg.value;
 
-    function distributeEth(uint ethDistAmount) public payable {
-        require(ethAmount >= ethDistAmount, 'Insuffcient ether balance for distribution');
+        // Validation
+        require(ethDistAmount > 0, 'Insuffcient ether balance for distribution');
+        
+        // Calculate fees.
         uint ethFee = ethDistAmount.mul(feeRate).div(10000);
-        feeAmount = feeAmount + ethFee;
-
+       
         uint ethToBeDistributed = ethDistAmount - ethFee;
         uint individualEthAmount = ethToBeDistributed.div(users.length);
         for (uint i = 0; i < users.length; i++) {
@@ -47,7 +41,8 @@ contract EtherDistribute {
             require(sent, "Failed to send Ether");
             emit Distributed(_to, individualEthAmount);
         }
-        ethAmount = ethAmount.sub(ethDistAmount);
+
+        feeAmount = feeAmount + ethFee;
     }
 
     function withdrawFees() public payable {
@@ -58,10 +53,5 @@ contract EtherDistribute {
         require(success, "Failed to withdraw fee");
 
         emit FeeWithdrawn(msg.sender, feeAmount);
-    }
-
-    receive() external payable {
-        ethAmount = ethAmount.add(msg.value);
-        emit Received(msg.sender, msg.value);
     }
 }

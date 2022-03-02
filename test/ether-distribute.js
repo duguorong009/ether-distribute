@@ -2,68 +2,31 @@ const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
 describe("Ether-Distribute contract", function() {
-    it("Deployment should be success", async function () {
-        const [admin] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
 
-        const ethDistributeContract = await ethDistributeFactory.deploy();
+    let admin;
+    let user;
+    let ethDistributeFactory;
+    let ethDistributeContract;
+
+    beforeEach(async function() {
+        [admin, user] = await ethers.getSigners()
+        ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
+        ethDistributeContract = await ethDistributeFactory.deploy();
+    });
+
+    it("Deployment should be success", async function () {
 
         const contractAdmin = await ethDistributeContract.getAdmin();
-
         expect(contractAdmin.toString()).to.equal(admin.address.toString());
-    });
 
-    it("Should receive Ethers from the user", async function () {
-        const [admin, user] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
-
-        const ethDistributeContract = await ethDistributeFactory.deploy();
-
-        await user.sendTransaction({
-            to: ethDistributeContract.address,
-            value: ethers.utils.parseEther("1.0")
-        });
-
-        const contractEthAmount = await ethDistributeContract.ethAmount();
-        expect(contractEthAmount.toString()).to.equal(ethers.utils.parseEther("1.0").toString());
-
-    });
-
-    it("Should add users to the list", async function () {
-        const [user] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
-
-        const ethDistributeContract = await ethDistributeFactory.deploy();
-
-        const tx = await ethDistributeContract.addUser(user.address);
-        const receipt = await tx.wait();
-        const [addedUser, usersListLen] = receipt.events[0].args;
-
-        expect(addedUser.toString()).to.equal(user.address.toString());
-        expect(usersListLen.toString()).to.equal('1');
     });
 
     it("Should distribute the Ethers to the users", async function () {
-        const [admin, user] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
 
-        const ethDistributeContract = await ethDistributeFactory.deploy();
-
-        await user.sendTransaction({
-            to: ethDistributeContract.address,
-            value: ethers.utils.parseEther("1.0")
-        });
-
-        await ethDistributeContract.addUser(user.address);
-
-        await expect(ethDistributeContract.distributeEth(ethers.utils.parseEther("1.1"))).to.be.revertedWith("Insuffcient ether balance for distribution");
+        await expect(ethDistributeContract.distributeEth([user.address], { from: admin.address, value: "0" })).to.be.revertedWith("Insuffcient ether balance for distribution");
         
         const distributeAmount = ethers.utils.parseEther("0.6");
-        const tx = await ethDistributeContract.distributeEth(distributeAmount);
+        const tx = await ethDistributeContract.distributeEth([user.address], {from: admin.address, value: distributeAmount});
         const receipt = await tx.wait();
         
         expect(receipt.events.length).to.equal(1);
@@ -74,21 +37,9 @@ describe("Ether-Distribute contract", function() {
     });
 
     it("Should subtract the fee when distribution", async function () {
-        const [admin, user] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
 
-        const ethDistributeContract = await ethDistributeFactory.deploy();
-
-        await user.sendTransaction({
-            to: ethDistributeContract.address,
-            value: ethers.utils.parseEther("1.0")
-        });
-
-        await ethDistributeContract.addUser(user.address);
-        
         const distributeAmount = ethers.utils.parseEther("0.6");
-        const tx = await ethDistributeContract.distributeEth(distributeAmount);
+        const tx = await ethDistributeContract.distributeEth([user.address], {from: admin.address, value: distributeAmount});
         const receipt = await tx.wait();
         
         const [expectedUser, amount] = receipt.events[0].args;
@@ -100,23 +51,13 @@ describe("Ether-Distribute contract", function() {
     });
 
     it("Should withdraw fees", async function () {
-        const [admin, user] = await ethers.getSigners()
-        
-        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
-
-        const ethDistributeContract = await ethDistributeFactory.deploy();
-
-        await user.sendTransaction({
-            to: ethDistributeContract.address,
-            value: ethers.utils.parseEther("1.0")
-        });
-
-        await ethDistributeContract.addUser(user.address);
 
         const distributeAmount = ethers.utils.parseEther("0.6");
-        await ethDistributeContract.distributeEth(distributeAmount);
+        await ethDistributeContract.distributeEth([user.address], {from: admin.address, value: distributeAmount});
 
+        
         await expect(ethDistributeContract.connect(user).withdrawFees()).to.be.revertedWith("Unauthorized");
+
 
         const tx = await ethDistributeContract.withdrawFees();
         const receipt = await tx.wait();
