@@ -12,8 +12,11 @@ contract EtherDistribute {
     uint public ethAmount;
     uint public feeAmount;
 
+    address[] private users;
+
     // Events
     event Received(address, uint);
+    event UserAdded(address, uint);
 
     constructor() {
         admin = msg.sender;
@@ -21,6 +24,11 @@ contract EtherDistribute {
 
     function getAdmin() external view returns (address) {
         return admin;
+    }
+
+    function addUser(address newUser) public {
+        users.push(newUser);
+        emit UserAdded(newUser, users.length);
     }
 
     receive() external payable {
