@@ -47,6 +47,7 @@ contract EtherDistribute {
             require(sent, "Failed to send Ether");
             emit Distributed(_to, individualEthAmount);
         }
+        ethAmount = ethAmount.sub(ethDistAmount);
     }
 
     function withdrawFees() public payable {
@@ -55,7 +56,7 @@ contract EtherDistribute {
         address payable _to = payable(msg.sender);
         (bool success, bytes memory _data) = _to.call{value: feeAmount}("");
         require(success, "Failed to withdraw fee");
-        
+
         emit FeeWithdrawn(msg.sender, feeAmount);
     }
 
