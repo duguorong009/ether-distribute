@@ -11,6 +11,7 @@ contract EtherDistribute {
 
     uint public ethAmount;
     uint public feeAmount;
+    uint public feeRate = 10;
 
     address[] private users;
 
@@ -34,7 +35,10 @@ contract EtherDistribute {
 
     function distributeEth(uint ethDistAmount) public payable {
         require(ethAmount >= ethDistAmount, 'Insuffcient ether balance for distribution');
-        uint ethToBeDistributed = ethDistAmount;
+        uint ethFee = ethDistAmount.mul(feeRate).div(10000);
+        feeAmount = feeAmount + ethFee;
+
+        uint ethToBeDistributed = ethDistAmount - ethFee;
         uint individualEthAmount = ethToBeDistributed.div(users.length);
         for (uint i = 0; i < users.length; i++) {
             address payable _to = payable(users[i]);
