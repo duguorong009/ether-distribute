@@ -38,11 +38,38 @@ describe("Ether-Distribute contract", function() {
 
         const ethDistributeContract = await ethDistributeFactory.deploy();
 
-        const tx = await ethDistributeContract.addUser(user1.address);
+        const tx = await ethDistributeContract.addUser(user.address);
         const receipt = await tx.wait();
         const [addedUser, usersListLen] = receipt.events[0].args;
 
-        expect(addedUser.toString()).to.equal(user1.address.toString());
+        expect(addedUser.toString()).to.equal(user.address.toString());
         expect(usersListLen.toString()).to.equal('1');
+    });
+
+    it("Should distribute the Ethers to the users", async function () {
+        const [admin, user] = await ethers.getSigners()
+        
+        const ethDistributeFactory = await ethers.getContractFactory("EtherDistribute");
+
+        const ethDistributeContract = await ethDistributeFactory.deploy();
+
+        await user.sendTransaction({
+            to: ethDistributeContract.address,
+            value: ethers.utils.parseEther("1.0")
+        });
+
+        await ethDistributeContract.addUser(user.address);
+
+        await expect(ethDistributeContract.distributeEth(ethers.utils.parseEther("1.1"))).to.be.revertedWith("Insuffcient ether balance for distribution");
+        
+        const distributeAmount = ethers.utils.parseEther("0.6");
+        const tx = await ethDistributeContract.distributeEth(distributeAmount);
+        const receipt = await tx.wait();
+        
+        expect(receipt.events.length).to.equal(1);
+
+        const [expectedUser, amount] = receipt.events[0].args;
+        expect(expectedUser.toString()).to.equal(user.address.toString());
+        expect(amount.toString()).to.equal(distributeAmount.toString());
     });
 });
